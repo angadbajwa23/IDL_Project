@@ -1,0 +1,9 @@
+backup
+output
+code/*.pyc
+code/miscc/*.pyc
+DAMSMencoders/coco/*.pth
+.DS_Store
+.idea/
+data/
+models/
