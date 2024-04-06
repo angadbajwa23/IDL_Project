@@ -32,7 +32,7 @@ class condGANTrainer(object):
             self.image_dir = os.path.join(output_dir, 'Image')
             mkdir_p(self.model_dir)
             mkdir_p(self.image_dir)
-
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         torch.cuda.set_device(cfg.GPU_ID)
         cudnn.benchmark = True
 
@@ -400,6 +400,10 @@ class condGANTrainer(object):
                     hidden = text_encoder.init_hidden(batch_size)
                     # words_embs: batch_size x nef x seq_len
                     # sent_emb: batch_size x nef
+                    text_encoder = text_encoder.to(self.device)
+                    hidden = tuple(h.to(self.device) for h in hidden)
+                    captions = captions.to(self.device)  
+                    cap_lens = cap_lens.to(self.device)
                     words_embs, sent_emb = text_encoder(captions, cap_lens, hidden)
                     words_embs, sent_emb = words_embs.detach(), sent_emb.detach()
                     mask = (captions == 0)
@@ -438,6 +442,8 @@ class condGANTrainer(object):
                 RNN_ENCODER(self.n_words, nhidden=cfg.TEXT.EMBEDDING_DIM)
             state_dict = \
                 torch.load(cfg.TRAIN.NET_E, map_location=lambda storage, loc: storage)
+            for key in state_dict:
+                print(key, state_dict[key].size())
             text_encoder.load_state_dict(state_dict)
             for key in state_dict:
                 print(key,state_dict[key].size())
