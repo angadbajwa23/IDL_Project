@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-from __future__ import unicode_literals
+# from __future__ import unicode_literalsYO
 
 
 from nltk.tokenize import RegexpTokenizer
@@ -12,7 +12,7 @@ import torch
 import torch.utils.data as data
 from torch.autograd import Variable
 import torchvision.transforms as transforms
-
+from transformers import BertTokenizer
 import os
 import sys
 import numpy as np
@@ -25,13 +25,51 @@ else:
     import pickle
 
 
-def prepare_data(data):
+# def prepare_data(data):
+#     imgs, captions, captions_lens, class_ids, keys = data
+
+#     # sort data by the length in a decreasing order
+#     sorted_cap_lens, sorted_cap_indices = \
+#         torch.sort(captions_lens, 0, True)
+
+#     real_imgs = []
+#     for i in range(len(imgs)):
+#         imgs[i] = imgs[i][sorted_cap_indices]
+#         if cfg.CUDA:
+#             real_imgs.append(Variable(imgs[i]).cuda())
+#         else:
+#             real_imgs.append(Variable(imgs[i]))
+
+#     captions = captions[sorted_cap_indices].squeeze()
+#     class_ids = class_ids[sorted_cap_indices].numpy()
+#     # sent_indices = sent_indices[sorted_cap_indices]
+#     keys = [keys[i] for i in sorted_cap_indices.numpy()]
+#     # print('keys', type(keys), keys[-1])  # list
+#     if cfg.CUDA:
+#         captions = Variable(captions).cuda()
+#         sorted_cap_lens = Variable(sorted_cap_lens).cuda()
+#     else:
+#         captions = Variable(captions)
+#         sorted_cap_lens = Variable(sorted_cap_lens)
+
+#     return [real_imgs, captions, sorted_cap_lens,
+#             class_ids, keys]
+
+tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+
+def prepare_data_for_bert(data):
     imgs, captions, captions_lens, class_ids, keys = data
-
-    # sort data by the length in a decreasing order
-    sorted_cap_lens, sorted_cap_indices = \
-        torch.sort(captions_lens, 0, True)
-
+    # Tokenize captions
+    # This will return a dictionary containing 'input_ids' and 'attention_mask'
+    tokenized = tokenizer(captions, padding=True, truncation=True, return_tensors="pt", max_length=512)
+    
+    # Sort data by the length in a decreasing order
+    sorted_cap_lens, sorted_cap_indices = torch.sort(captions_lens, 0, True)
+    
+    # Sort tokenized data according to sorted_cap_indices
+    input_ids = tokenized['input_ids'][sorted_cap_indices]
+    attention_mask = tokenized['attention_mask'][sorted_cap_indices]
+    
     real_imgs = []
     for i in range(len(imgs)):
         imgs[i] = imgs[i][sorted_cap_indices]
@@ -39,21 +77,21 @@ def prepare_data(data):
             real_imgs.append(Variable(imgs[i]).cuda())
         else:
             real_imgs.append(Variable(imgs[i]))
-
-    captions = captions[sorted_cap_indices].squeeze()
+    
     class_ids = class_ids[sorted_cap_indices].numpy()
-    # sent_indices = sent_indices[sorted_cap_indices]
     keys = [keys[i] for i in sorted_cap_indices.numpy()]
-    # print('keys', type(keys), keys[-1])  # list
+    
+    # No need to sort captions and sorted_cap_lens because tokenized input is already sorted
     if cfg.CUDA:
-        captions = Variable(captions).cuda()
+        input_ids = Variable(input_ids).cuda()
+        attention_mask = Variable(attention_mask).cuda()
         sorted_cap_lens = Variable(sorted_cap_lens).cuda()
     else:
-        captions = Variable(captions)
+        input_ids = Variable(input_ids)
+        attention_mask = Variable(attention_mask)
         sorted_cap_lens = Variable(sorted_cap_lens)
-
-    return [real_imgs, captions, sorted_cap_lens,
-            class_ids, keys]
+    
+    return [real_imgs, input_ids, sorted_cap_lens, attention_mask, class_ids, keys]
 
 
 def get_imgs(img_path, imsize, bbox=None,
@@ -77,8 +115,10 @@ def get_imgs(img_path, imsize, bbox=None,
     if cfg.GAN.B_DCGAN:
         ret = [normalize(img)]
     else:
+        cfg.TREE.BRANCH_NUM = 1
         for i in range(cfg.TREE.BRANCH_NUM):
             # print(imsize[i])
+            # print(i)
             if i < (cfg.TREE.BRANCH_NUM - 1):
                 re_img = transforms.Resize(imsize[i])(img)
             else:
@@ -98,7 +138,7 @@ class TextDataset(data.Dataset):
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
         self.target_transform = target_transform
         self.embeddings_num = cfg.TEXT.CAPTIONS_PER_IMAGE
-
+        self.split = split
         self.imsize = []
         for i in range(cfg.TREE.BRANCH_NUM):
             self.imsize.append(base_size)
@@ -112,7 +152,7 @@ class TextDataset(data.Dataset):
             self.bbox = None
         split_dir = os.path.join(data_dir, split)
 
-        self.filenames, self.captions, self.ixtoword, \
+        self.filenames, self.raw_captions, self.captions, self.ixtoword, \
             self.wordtoix, self.n_words = self.load_text_data(data_dir, split)
 
         self.class_id = self.load_class_id(split_dir, len(self.filenames))
@@ -142,12 +182,12 @@ class TextDataset(data.Dataset):
         #
         return filename_bbox
 
-    def load_captions(self, data_dir, filenames):
+    def load_captions(self, data_dir, split, filenames):
         all_captions = []
         for i in range(len(filenames)):
-            cap_path = '%s/text/%s.txt' % (data_dir, filenames[i])
+            cap_path = '%s/%s2014/%s.txt' % (data_dir, split, filenames[i])
             with open(cap_path, "r") as f:
-                captions = f.read().decode('utf8').split('\n')
+                captions = f.read().split('\n')
                 cnt = 0
                 for cap in captions:
                     if len(cap) == 0:
@@ -155,19 +195,19 @@ class TextDataset(data.Dataset):
                     cap = cap.replace("\ufffd\ufffd", " ")
                     # picks out sequences of alphanumeric characters as tokens
                     # and drops everything else
-                    tokenizer = RegexpTokenizer(r'\w+')
-                    tokens = tokenizer.tokenize(cap.lower())
+                    # tokenizer = RegexpTokenizer(r'\w+')
+                    # tokens = tokenizer.tokenize(cap.lower())
                     # print('tokens', tokens)
-                    if len(tokens) == 0:
-                        print('cap', cap)
-                        continue
+                    # if len(tokens) == 0:
+                    #     print('cap', cap)
+                    #     continue
 
-                    tokens_new = []
-                    for t in tokens:
-                        t = t.encode('ascii', 'ignore').decode('ascii')
-                        if len(t) > 0:
-                            tokens_new.append(t)
-                    all_captions.append(tokens_new)
+                    # tokens_new = []
+                    # for t in tokens:
+                    #     t = t.encode('ascii', 'ignore').decode('ascii')
+                    #     if len(t) > 0:
+                    #         tokens_new.append(t)
+                    all_captions.append(cap)
                     cnt += 1
                     if cnt == self.embeddings_num:
                         break
@@ -217,37 +257,42 @@ class TextDataset(data.Dataset):
                 ixtoword, wordtoix, len(ixtoword)]
 
     def load_text_data(self, data_dir, split):
-        filepath = os.path.join(data_dir, 'captions.pickle')
+        filepath = os.path.join(data_dir, 'our_captions.pickle')
         train_names = self.load_filenames(data_dir, 'train')
-        test_names = self.load_filenames(data_dir, 'test')
-        if not os.path.isfile(filepath):
-            train_captions = self.load_captions(data_dir, train_names)
-            test_captions = self.load_captions(data_dir, test_names)
+        test_names = self.load_filenames(data_dir, 'val')
+        # if not os.path.isfile(filepath):
+        ## since we dont want tokenized captions, we dont use their pickle file, instead we load raw captions and pass it to the bert data preprocessing
+        raw_train_captions = self.load_captions(data_dir, 'train', train_names)
+        raw_test_captions = self.load_captions(data_dir, 'val', test_names)
 
-            train_captions, test_captions, ixtoword, wordtoix, n_words = \
-                self.build_dictionary(train_captions, test_captions)
-            with open(filepath, 'wb') as f:
-                pickle.dump([train_captions, test_captions,
-                             ixtoword, wordtoix], f, protocol=2)
-                print('Save to: ', filepath)
-        else:
-            with open(filepath, 'rb') as f:
-                x = pickle.load(f)
-                train_captions, test_captions = x[0], x[1]
-                ixtoword, wordtoix = x[2], x[3]
-                print("ixtoword",ixtoword)
-                del x
-                n_words = len(ixtoword)
-                print('Load from: ', filepath)
+        train_captions, test_captions, ixtoword, wordtoix, n_words = \
+            self.build_dictionary(raw_train_captions, raw_test_captions)
+        with open(filepath, 'wb') as f:
+            pickle.dump([train_captions, test_captions,
+                            ixtoword, wordtoix], f, protocol=2)
+            print('Save to: ', filepath)
+        # else:
+        #     with open(filepath, 'rb') as f:
+        #         x = pickle.load(f)
+        #         train_captions, test_captions = x[0], x[1]
+        #         ixtoword, wordtoix = x[2], x[3]
+        #         print("ixtoword",ixtoword)
+        #         del x
+        #         n_words = len(ixtoword)
+        #         print('Load from: ', filepath)
         if split == 'train':
             # a list of list: each list contains
             # the indices of words in a sentence
+            raw_captions = raw_train_captions
             captions = train_captions
             filenames = train_names
         else:  # split=='test'
+            raw_captions = raw_test_captions
             captions = test_captions
             filenames = test_names
-        return filenames, captions, ixtoword, wordtoix, n_words
+        word2idx = tokenizer.get_vocab()
+        idx2word = {idx: word for word, idx in word2idx.items()}
+        return filenames, raw_captions, captions, idx2word, word2idx, n_words
 
     def load_class_id(self, data_dir, total_num):
         if os.path.isfile(data_dir + '/class_info.pickle'):
@@ -299,14 +344,16 @@ class TextDataset(data.Dataset):
             bbox = None
             data_dir = self.data_dir
         #
-        img_name = '%s/val2014/%s.jpg' % (data_dir, key)
+        img_name = '%s/%s2014/%s.jpg' % (data_dir, self.split, key)
         imgs = get_imgs(img_name, self.imsize,
                         bbox, self.transform, normalize=self.norm)
         # random select a sentence
         sent_ix = random.randint(0, self.embeddings_num)
         new_sent_ix = index * self.embeddings_num + sent_ix
-        caps, cap_len = self.get_caption(new_sent_ix)
-        return imgs, caps, cap_len, cls_id, key
+        # Raw captions needed for BERT, so replaced caps with self.raw_captions
+        cap = self.raw_captions[new_sent_ix]
+        cap_len = len(cap.split()) 
+        return imgs, cap, cap_len, cls_id, key
 
 
     def __len__(self):

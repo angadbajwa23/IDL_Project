@@ -14,8 +14,8 @@ from miscc.utils import mkdir_p
 from miscc.utils import build_super_images, build_super_images2
 from miscc.utils import weights_init, load_params, copy_G_params
 from model import G_DCGAN, G_NET
-from datasets import prepare_data
-from model import RNN_ENCODER, CNN_ENCODER
+from datasets import prepare_data_for_bert
+from model import BERT_ENCODER, CNN_ENCODER
 
 from miscc.losses import words_loss
 from miscc.losses import discriminator_loss, generator_loss, KL_loss
@@ -62,7 +62,7 @@ class condGANTrainer(object):
         image_encoder.eval()
 
         text_encoder = \
-            RNN_ENCODER(self.n_words, nhidden=cfg.TEXT.EMBEDDING_DIM)
+            BERT_ENCODER(self.n_words, nhidden=cfg.TEXT.EMBEDDING_DIM)
         state_dict = \
             torch.load(cfg.TRAIN.NET_E,
                        map_location=lambda storage, loc: storage)
@@ -243,12 +243,12 @@ class condGANTrainer(object):
                 # (1) Prepare training data and Compute text embeddings
                 ######################################################
                 data = data_iter.next()
-                imgs, captions, cap_lens, class_ids, keys = prepare_data(data)
+                imgs, captions, cap_lens, class_ids, keys = prepare_data_for_bert(data)
 
-                hidden = text_encoder.init_hidden(batch_size)
+                # hidden = text_encoder.init_hidden(batch_size)
                 # words_embs: batch_size x nef x seq_len
                 # sent_emb: batch_size x nef
-                words_embs, sent_emb = text_encoder(captions, cap_lens, hidden)
+                words_embs, sent_emb = text_encoder(captions, cap_lens)
                 words_embs, sent_emb = words_embs.detach(), sent_emb.detach()
                 mask = (captions == 0)
                 num_words = words_embs.size(2)
@@ -360,7 +360,7 @@ class condGANTrainer(object):
             netG.cuda()
             netG.eval()
             #
-            text_encoder = RNN_ENCODER(self.n_words, nhidden=cfg.TEXT.EMBEDDING_DIM)
+            text_encoder = BERT_ENCODER(self.n_words, nhidden=cfg.TEXT.EMBEDDING_DIM)
             state_dict = \
                 torch.load(cfg.TRAIN.NET_E, map_location=lambda storage, loc: storage)
             text_encoder.load_state_dict(state_dict)
@@ -395,16 +395,16 @@ class condGANTrainer(object):
                     # if step > 50:
                     #     break
 
-                    imgs, captions, cap_lens, class_ids, keys = prepare_data(data)
+                    imgs, captions, cap_lens, class_ids, keys = prepare_data_for_bert(data)
 
-                    hidden = text_encoder.init_hidden(batch_size)
+                    # hidden = text_encoder.init_hidden(batch_size)
                     # words_embs: batch_size x nef x seq_len
                     # sent_emb: batch_size x nef
                     text_encoder = text_encoder.to(self.device)
-                    hidden = tuple(h.to(self.device) for h in hidden)
+                    # hidden = tuple(h.to(self.device) for h in hidden)
                     captions = captions.to(self.device)  
                     cap_lens = cap_lens.to(self.device)
-                    words_embs, sent_emb = text_encoder(captions, cap_lens, hidden)
+                    words_embs, sent_emb = text_encoder(captions, cap_lens)
                     words_embs, sent_emb = words_embs.detach(), sent_emb.detach()
                     mask = (captions == 0)
                     num_words = words_embs.size(2)
@@ -439,7 +439,7 @@ class condGANTrainer(object):
         else:
             # Build and load the generator
             text_encoder = \
-                RNN_ENCODER(self.n_words, nhidden=cfg.TEXT.EMBEDDING_DIM)
+                BERT_ENCODER(self.n_words, nhidden=cfg.TEXT.EMBEDDING_DIM)
             state_dict = \
                 torch.load(cfg.TRAIN.NET_E, map_location=lambda storage, loc: storage)
             for key in state_dict:
@@ -483,10 +483,10 @@ class condGANTrainer(object):
                     #######################################################
                     # (1) Extract text embeddings
                     ######################################################
-                    hidden = text_encoder.init_hidden(batch_size)
+                    # hidden = text_encoder.init_hidden(batch_size)
                     # words_embs: batch_size x nef x seq_len
                     # sent_emb: batch_size x nef
-                    words_embs, sent_emb = text_encoder(captions, cap_lens, hidden)
+                    words_embs, sent_emb = text_encoder(captions, cap_lens)
                     mask = (captions == 0)
                     #######################################################
                     # (2) Generate fake images
