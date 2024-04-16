@@ -352,6 +352,9 @@ class TextDataset(data.Dataset):
         new_sent_ix = index * self.embeddings_num + sent_ix
         # Raw captions needed for BERT, so replaced caps with self.raw_captions
         cap = self.raw_captions[new_sent_ix]
+        
+        if len(cap.strip()) == 0:  # Check if the caption is effectively empty
+            cap = "[CLS]"
         cap_len = len(cap.split()) 
         return imgs, cap, cap_len, cls_id, key
 

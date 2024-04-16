@@ -134,7 +134,8 @@ def evaluate(dataloader, cnn_model, rnn_model, batch_size):
     s_total_loss = 0
     w_total_loss = 0
     for step, data in enumerate(dataloader, 0):
-        real_imgs, input_ids, attention_mask, \
+        
+        real_imgs, input_ids, cap_lens, attention_mask, \
                 class_ids, keys = prepare_data_for_bert(data)
 
         words_features, sent_code = cnn_model(real_imgs[-1])
@@ -145,7 +146,7 @@ def evaluate(dataloader, cnn_model, rnn_model, batch_size):
         words_emb, sent_emb = rnn_model(input_ids, attention_mask)
 
         w_loss0, w_loss1, attn = words_loss(words_features, words_emb, labels,
-                                            attention_mask, class_ids, batch_size)
+                                            cap_lens, class_ids, batch_size)
         w_total_loss += (w_loss0 + w_loss1).data
 
         s_loss0, s_loss1 = \
@@ -155,8 +156,8 @@ def evaluate(dataloader, cnn_model, rnn_model, batch_size):
         if step == 50:
             break
 
-    s_cur_loss = s_total_loss[0] / step
-    w_cur_loss = w_total_loss[0] / step
+    s_cur_loss = s_total_loss.item() / step
+    w_cur_loss = w_total_loss.item() / step
 
     return s_cur_loss, w_cur_loss
 
