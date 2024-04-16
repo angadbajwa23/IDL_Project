@@ -36,7 +36,7 @@ def parse_args():
 def gen_example(wordtoix, algo):
     '''generate images from example sentences'''
     from nltk.tokenize import RegexpTokenizer
-    filepath = '%s/example_filenames.txt' % (cfg.DATA_DIR)
+    filepath = '%s/flickr_captions.txt' % (cfg.DATA_DIR)
     data_dic = {}
     with open(filepath, "r") as f:
         filenames = f.read().split('\n')

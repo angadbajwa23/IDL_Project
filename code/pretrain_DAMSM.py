@@ -235,14 +235,14 @@ if __name__ == "__main__":
     imsize = cfg.TREE.BASE_SIZE * (2 ** (cfg.TREE.BRANCH_NUM-1))
     batch_size = cfg.TRAIN.BATCH_SIZE
     image_transform = transforms.Compose([
-        transforms.Scale(int(imsize * 76 / 64)),
+        transforms.Resize(int(imsize * 76 / 64)),
         transforms.RandomCrop(imsize),
         transforms.RandomHorizontalFlip()])
     dataset = TextDataset(cfg.DATA_DIR, 'train',
                           base_size=cfg.TREE.BASE_SIZE,
                           transform=image_transform)
 
-    print(dataset.n_words, dataset.embeddings_num)
+    #print(dataset.n_words, dataset.embeddings_num)
     assert dataset
     dataloader = torch.utils.data.DataLoader(
         dataset, batch_size=batch_size, drop_last=True,
