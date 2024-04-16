@@ -29,7 +29,8 @@ def sent_loss(cnn_code, rnn_code, labels, class_ids,
             masks.append(mask.reshape((1, -1)))
         masks = np.concatenate(masks, 0)
         # masks: batch_size x batch_size
-        masks = torch.ByteTensor(masks)
+        # masks = torch.ByteTensor(masks)
+        masks = torch.from_numpy(masks).bool() 
         if cfg.CUDA:
             masks = masks.cuda()
 
@@ -68,15 +69,20 @@ def words_loss(img_features, words_emb, labels,
     masks = []
     att_maps = []
     similarities = []
+    # print("(In losses) cap_lens: ", cap_lens)
     cap_lens = cap_lens.data.tolist()
     for i in range(batch_size):
         if class_ids is not None:
-            mask = (class_ids == class_ids[i]).astype(np.uint8)
-            mask[i] = 0
+            # mask = (class_ids == class_ids[i]).astype(np.uint8)
+            mask = (class_ids == class_ids[i]).astype(bool)
+            # mask[i] = 0
+            mask[i] = False
             masks.append(mask.reshape((1, -1)))
         # Get the i-th text description
         words_num = cap_lens[i]
         # -> 1 x nef x words_num
+        # print("words_emb shape:", words_emb.shape)
+        # print(words_num)
         word = words_emb[i, :, :words_num].unsqueeze(0).contiguous()
         # -> batch_size x nef x words_num
         word = word.repeat(batch_size, 1, 1)
@@ -116,7 +122,8 @@ def words_loss(img_features, words_emb, labels,
     if class_ids is not None:
         masks = np.concatenate(masks, 0)
         # masks: batch_size x batch_size
-        masks = torch.ByteTensor(masks)
+        # masks = torch.ByteTensor(masks)
+        masks = torch.from_numpy(masks).bool() 
         if cfg.CUDA:
             masks = masks.cuda()
 
