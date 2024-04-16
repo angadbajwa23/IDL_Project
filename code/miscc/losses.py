@@ -84,6 +84,7 @@ def words_loss(img_features, words_emb, labels,
         # print("words_emb shape:", words_emb.shape)
         # print(words_num)
         word = words_emb[i, :, :words_num].unsqueeze(0).contiguous()
+        # print(word.shape)
         # -> batch_size x nef x words_num
         word = word.repeat(batch_size, 1, 1)
         # batch x nef x 17*17
