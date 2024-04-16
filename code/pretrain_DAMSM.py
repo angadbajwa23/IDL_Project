@@ -250,6 +250,8 @@ if __name__ == "__main__":
     dataset_val = TextDataset(cfg.DATA_DIR, 'val',
                               base_size=cfg.TREE.BASE_SIZE,
                               transform=image_transform)
+    
+    print('val data path',cfg.DATA_DIR)
     dataloader_val = torch.utils.data.DataLoader(
         dataset_val, batch_size=batch_size, drop_last=True,
         shuffle=True, num_workers=int(cfg.WORKERS))
