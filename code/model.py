@@ -169,6 +169,8 @@ class BERT_ENCODER(nn.Module):
 
     def define_module(self):
         self.bert = BertModel.from_pretrained('bert-base-uncased')
+        for param in self.bert.parameters():
+            param.requires_grad = False
         self.word_linear = nn.Linear(768, self.ninput)  # Adjust word embeddings dimension
         self.sent_linear = nn.Linear(768, self.ninput)  # Adjust sentence embeddings dimension
         self.drop = nn.Dropout(self.drop_prob)
