@@ -266,31 +266,44 @@ class RNN_ENCODER(nn.Module):
 #             features = self.emb_features(features)
 #         return features, cnn_code
 
-class CLIP_ENCODER(nn.Module):
+class CNN_ENCODER(nn.Module):
     def __init__(self, nef):
-        super(CLIP_ENCODER, self).__init__()
+        super(CNN_ENCODER, self).__init__()
         self.nef = nef
-        # Load the pre-trained CLIP model
-        self.clip_model, _ = clip.load("ViT-B/32", device='cuda' if torch.cuda.is_available() else 'cpu')
-        
+        self.clip_model, _ = clip.load('ViT-B/32', device='cuda')
+        self.clip_model = self.clip_model.float()  # Load model to CUDA
         for param in self.clip_model.parameters():
             param.requires_grad = False
+
+        self.emb_features = nn.Linear(768, nef*17*17)
+        self.emb_cnn_code = nn.Linear(self.clip_model.visual.output_dim, nef)
+        self.init_trainable_weights()
         
-        self.layer_index = -1  
-        self.emb_cnn_code = nn.Linear(self.clip_model.visual.output_dim, self.nef)
+    def init_trainable_weights(self):
+        initrange = 0.1
+        self.emb_features.weight.data.uniform_(-initrange, initrange)
+        self.emb_cnn_code.weight.data.uniform_(-initrange, initrange)
 
     def forward(self, x):
-
-        x = clip.tokenize(x, truncate=True).to(self.clip_model.device)
-
+        img = x
+        x = x.float()  # Ensure input is in float32
         with torch.no_grad():
-            image_features = self.clip_model.encode_image(x)
-        
-        intermediate_features = self.clip_model.visual.transformer.resblocks[self.layer_index](image_features)
-        cnn_code = self.emb_cnn_code(intermediate_features.view(intermediate_features.size(0), -1))
+            x = self.clip_model.visual.conv1(x)
+            x = x.flatten(2)
+            x = x.transpose(1, 2)
+            x = self.clip_model.visual.ln_pre(x)
 
-        return intermediate_features, cnn_code
+            for i, layer in enumerate(self.clip_model.visual.transformer.resblocks):
+                x = layer(x)
+                if i == 7:
+                    intermediate_features = x.mean(dim=1)
 
+        features = self.emb_features(intermediate_features)
+        with torch.no_grad():
+            image_features = self.clip_model.encode_image(img)
+        cnn_code = self.emb_cnn_code(image_features)
+        return features, cnn_code
+    
 # ############## G networks ###################
 class CA_NET(nn.Module):
     # some code is modified from vae examples
