@@ -7,3 +7,4 @@ DAMSMencoders/coco/*.pth
 .idea/
 data/
 models/
+code/wandb

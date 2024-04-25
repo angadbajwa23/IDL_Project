@@ -19,6 +19,7 @@ import datetime
 import dateutil.tz
 import argparse
 import numpy as np
+import wandb
 from PIL import Image
 
 import torch
@@ -38,7 +39,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Train a DAMSM network')
     parser.add_argument('--cfg', dest='cfg_file',
                         help='optional config file',
-                        default='C:\\Users\\mehal\\Downloads\\18786Project\\AttnGAN\\code\\cfg\\DAMSM\\coco.yml', type=str)
+                        default='./cfg/DAMSM/coco.yml', type=str)
     parser.add_argument('--gpu', dest='gpu_id', type=int, default=0)
     parser.add_argument('--data_dir', dest='data_dir', type=str, default='')
     parser.add_argument('--manualSeed', type=int, help='manual seed')
@@ -112,6 +113,7 @@ def train(dataloader, cnn_model, rnn_model, batch_size,
                           elapsed * 1000. / UPDATE_INTERVAL,
                           s_cur_loss0, s_cur_loss1,
                           w_cur_loss0, w_cur_loss1))
+
             s_total_loss0 = 0
             s_total_loss1 = 0
             w_total_loss0 = 0
@@ -125,6 +127,14 @@ def train(dataloader, cnn_model, rnn_model, batch_size,
                 im = Image.fromarray(img_set)
                 fullpath = '%s/attention_maps%d.png' % (image_dir, step)
                 im.save(fullpath)
+    wandb.log({
+    "epoch": epoch,
+    "s_cur_loss0": s_cur_loss0,
+    "s_cur_loss1": s_cur_loss1,
+    'w_cur_loss0': w_cur_loss0,
+    'eval_w_cur_loss1': w_cur_loss1,
+    "lr": lr,
+    })
     return count
 
 
@@ -229,6 +239,14 @@ if __name__ == "__main__":
 
     torch.cuda.set_device(cfg.GPU_ID)
     cudnn.benchmark = True
+    ## Init wandb
+    # wandb.login(key=WANDB_KEY)
+    wandb_config = {
+        'BATCH_SIZE': cfg.TRAIN.BATCH_SIZE,
+        'learning_rate': cfg.TRAIN.ENCODER_LR,
+    }
+    wandb.init(project='idl', name='bert-fixed', config=wandb_config)
+
 
     # Get data loader ##################################################
     imsize = cfg.TREE.BASE_SIZE * (2 ** (cfg.TREE.BRANCH_NUM-1))
@@ -280,6 +298,10 @@ if __name__ == "__main__":
                 print('| end epoch {:3d} | valid loss '
                       '{:5.2f} {:5.2f} | lr {:.5f}|'
                       .format(epoch, s_loss, w_loss, lr))
+                wandb.log({
+                    "valid_s_loss": s_loss,
+                    "valid_w_loss": w_loss,
+                    })
             print('-' * 89)
             if lr > cfg.TRAIN.ENCODER_LR/10.:
                 lr *= 0.98
