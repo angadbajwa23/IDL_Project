@@ -218,9 +218,9 @@ class TextDataset(data.Dataset):
                 ixtoword, wordtoix, len(ixtoword)]
 
     def load_text_data(self, data_dir, split):
-        filepath = os.path.join(data_dir, 'captions.pickle')
+        filepath = os.path.join(data_dir, 'our_captions.pickle')
         train_names = self.load_filenames(data_dir, 'train')
-        test_names = self.load_filenames(data_dir, 'test')
+        test_names = self.load_filenames(data_dir, 'val')
         if not os.path.isfile(filepath):
             train_captions = self.load_captions(data_dir, train_names)
             test_captions = self.load_captions(data_dir, test_names)

@@ -129,6 +129,8 @@ def train(dataloader, cnn_model, rnn_model, batch_size,
                 im = Image.fromarray(img_set)
                 fullpath = '%s/attention_maps%d.png' % (image_dir, step)
                 im.save(fullpath)
+        if step==200:
+            break
     return count
 
 
@@ -144,7 +146,7 @@ def evaluate(dataloader, cnn_model, rnn_model, batch_size):
         words_features, sent_code = cnn_model(real_imgs[-1])
         # nef = words_features.size(1)
         # words_features = words_features.view(batch_size, nef, -1)
-
+        words_features = words_features.reshape(-1, cfg.TEXT.EMBEDDING_DIM, 17, 17)
         hidden = rnn_model.init_hidden(batch_size)
         words_emb, sent_emb = rnn_model(captions, cap_lens, hidden)
 
@@ -251,7 +253,7 @@ if __name__ == "__main__":
         shuffle=True, num_workers=int(cfg.WORKERS))
 
     # # validation data #
-    dataset_val = TextDataset(cfg.DATA_DIR, 'test',
+    dataset_val = TextDataset(cfg.DATA_DIR, 'val',
                               base_size=cfg.TREE.BASE_SIZE,
                               transform=image_transform)
     dataloader_val = torch.utils.data.DataLoader(
