@@ -1,14 +1,14 @@
 CONFIG_NAME: 'DAMSM'
 
-DATASET_NAME: 'coco'
-DATA_DIR: '../data/coco'
+DATASET_NAME: 'cat'
+DATA_DIR: '../data/cat'
 GPU_ID: 0
 WORKERS: 1
 
 
 TREE:
     BRANCH_NUM: 1
-    BASE_SIZE: 299
+    BASE_SIZE: 224
 
 
 TRAIN:

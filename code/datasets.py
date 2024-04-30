@@ -115,7 +115,7 @@ def get_imgs(img_path, imsize, bbox=None,
     if cfg.GAN.B_DCGAN:
         ret = [normalize(img)]
     else:
-        # cfg.TREE.BRANCH_NUM = 1
+        cfg.TREE.BRANCH_NUM = 1
         for i in range(cfg.TREE.BRANCH_NUM):
             # print(imsize[i])
             # print(i)

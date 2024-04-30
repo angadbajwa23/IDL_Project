@@ -8,7 +8,7 @@ from miscc.config import cfg, cfg_from_file
 from datasets import TextDataset
 from datasets import prepare_data_for_bert
 
-from model import BERT_ENCODER, CNN_ENCODER
+from model import BERT_ENCODER, CLIP_IMAGE_ENCODER
 
 import os
 import sys
@@ -34,7 +34,7 @@ dir_path = (os.path.abspath(os.path.join(os.path.realpath(__file__), './.')))
 sys.path.append(dir_path)
 
 
-UPDATE_INTERVAL = 200
+UPDATE_INTERVAL = 20
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a DAMSM network')
     parser.add_argument('--cfg', dest='cfg_file',
@@ -68,6 +68,7 @@ def train(dataloader, cnn_model, rnn_model, batch_size,
         # words_features: batch_size x nef x 17 x 17
         # sent_code: batch_size x nef
         words_features, sent_code = cnn_model(imgs[-1])
+        words_features = words_features.reshape(-1, cfg.TEXT.EMBEDDING_DIM, 17, 17)
         # --> batch_size x nef x 17*17
         nef, att_sze = words_features.size(1), words_features.size(2)
         # words_features = words_features.view(batch_size, nef, -1)
@@ -149,6 +150,7 @@ def evaluate(dataloader, cnn_model, rnn_model, batch_size):
                 class_ids, keys = prepare_data_for_bert(data)
 
         words_features, sent_code = cnn_model(real_imgs[-1])
+        words_features = words_features.reshape(-1, cfg.TEXT.EMBEDDING_DIM, 17, 17)
         # nef = words_features.size(1)
         # words_features = words_features.view(batch_size, nef, -1)
 
@@ -175,7 +177,7 @@ def evaluate(dataloader, cnn_model, rnn_model, batch_size):
 def build_models():
     # build model ############################################################
     text_encoder = BERT_ENCODER(cfg.TEXT.EMBEDDING_DIM)
-    image_encoder = CNN_ENCODER(cfg.TEXT.EMBEDDING_DIM)
+    image_encoder = CLIP_IMAGE_ENCODER(cfg.TEXT.EMBEDDING_DIM)
     labels = Variable(torch.LongTensor(range(batch_size)))
     start_epoch = 0
     if cfg.TRAIN.NET_E != '':
