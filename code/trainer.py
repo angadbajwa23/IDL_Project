@@ -62,7 +62,7 @@ class condGANTrainer(object):
         image_encoder.eval()
 
         text_encoder = \
-            RNN_ENCODER(self.n_words, nhidden=cfg.TEXT.EMBEDDING_DIM)
+            RNN_ENCODER(27297, nhidden=cfg.TEXT.EMBEDDING_DIM)
         state_dict = \
             torch.load(cfg.TRAIN.NET_E,
                        map_location=lambda storage, loc: storage)
@@ -242,7 +242,7 @@ class condGANTrainer(object):
                 ######################################################
                 # (1) Prepare training data and Compute text embeddings
                 ######################################################
-                data = data_iter.next()
+                data = next(data_iter)
                 imgs, captions, cap_lens, class_ids, keys = prepare_data(data)
 
                 hidden = text_encoder.init_hidden(batch_size)
@@ -274,7 +274,7 @@ class condGANTrainer(object):
                     errD.backward()
                     optimizersD[i].step()
                     errD_total += errD
-                    D_logs += 'errD%d: %.2f ' % (i, errD.data[0])
+                    D_logs += 'errD%d: %.2f ' % (i, errD.item())
 
                 #######################################################
                 # (4) Update G network: maximize log(D(G(z)))
@@ -291,7 +291,7 @@ class condGANTrainer(object):
                                    words_embs, sent_emb, match_labels, cap_lens, class_ids)
                 kl_loss = KL_loss(mu, logvar)
                 errG_total += kl_loss
-                G_logs += 'kl_loss: %.2f ' % kl_loss.data[0]
+                G_logs += 'kl_loss: %.2f ' % kl_loss.item()
                 # backward and update parameters
                 errG_total.backward()
                 optimizerG.step()
@@ -318,7 +318,7 @@ class condGANTrainer(object):
             print('''[%d/%d][%d]
                   Loss_D: %.2f Loss_G: %.2f Time: %.2fs'''
                   % (epoch, self.max_epoch, self.num_batches,
-                     errD_total.data[0], errG_total.data[0],
+                     errD_total.item(), errG_total.item(),
                      end_t - start_t))
 
             if epoch % cfg.TRAIN.SNAPSHOT_INTERVAL == 0:  # and epoch != 0:
