@@ -189,7 +189,7 @@ class condGANTrainer(object):
             attn_maps = attention_maps[i]
             att_sze = attn_maps.size(2)
             img_set, _ = \
-                build_super_images(img, captions, self.ixtoword,
+                build_super_images(img, captions,
                                    attn_maps, att_sze, lr_imgs=lr_img)
             if img_set is not None:
                 im = Image.fromarray(img_set)
@@ -208,7 +208,7 @@ class condGANTrainer(object):
                                     None, self.batch_size)
         img_set, _ = \
             build_super_images(fake_imgs[i].detach().cpu(),
-                               captions, self.ixtoword, att_maps, att_sze)
+                               captions, att_maps, att_sze)
         if img_set is not None:
             im = Image.fromarray(img_set)
             fullpath = '%s/D_%s_%d.png'\
@@ -243,14 +243,15 @@ class condGANTrainer(object):
                 # (1) Prepare training data and Compute text embeddings
                 ######################################################
                 data = data_iter.next()
-                imgs, captions, cap_lens, class_ids, keys = prepare_data(data)
+                imgs, captions, cap_lens, class_ids, keys = data
 
-                hidden = text_encoder.init_hidden(batch_size)
+                # hidden = text_encoder.init_hidden(batch_size)
                 # words_embs: batch_size x nef x seq_len
                 # sent_emb: batch_size x nef
-                words_embs, sent_emb = text_encoder(captions, cap_lens, hidden)
-                words_embs, sent_emb = words_embs.detach(), sent_emb.detach()
-                mask = (captions == 0)
+                words_embs, sent_emb, attention_mask = text_encoder(captions)
+                words_embs, sent_emb, attention_mask = words_embs.detach(), sent_emb.detach(), attention_mask.detach()
+                # mask = (captions == 0)
+                mask = attention_mask
                 num_words = words_embs.size(2)
                 if mask.size(1) > num_words:
                     mask = mask[:, :num_words]

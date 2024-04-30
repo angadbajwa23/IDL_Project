@@ -77,6 +77,7 @@ def get_imgs(img_path, imsize, bbox=None,
     if cfg.GAN.B_DCGAN:
         ret = [normalize(img)]
     else:
+        cfg.TREE.BRANCH_NUM = 1
         for i in range(cfg.TREE.BRANCH_NUM):
             # print(imsize[i])
             if i < (cfg.TREE.BRANCH_NUM - 1):
@@ -112,8 +113,7 @@ class TextDataset(data.Dataset):
             self.bbox = None
         split_dir = os.path.join(data_dir, split)
         self.split = split
-        self.filenames, self.captions, self.ixtoword, \
-            self.wordtoix, self.n_words = self.load_text_data(data_dir, split)
+        self.filenames, self.captions = self.load_text_data(data_dir, split)
 
         self.class_id = self.load_class_id(split_dir, len(self.filenames))
         self.number_example = len(self.filenames)
@@ -142,32 +142,18 @@ class TextDataset(data.Dataset):
         #
         return filename_bbox
 
-    def load_captions(self, data_dir, filenames):
+    def load_captions(self, data_dir, split, filenames):
         all_captions = []
         for i in range(len(filenames)):
-            cap_path = '%s/text/%s.txt' % (data_dir, filenames[i])
+            cap_path = '%s/%s2014/%s.txt' % (data_dir, split, filenames[i])
             with open(cap_path, "r") as f:
-                captions = f.read().decode('utf8').split('\n')
+                captions = f.read().split('\n')
                 cnt = 0
                 for cap in captions:
                     if len(cap) == 0:
                         continue
                     cap = cap.replace("\ufffd\ufffd", " ")
-                    # picks out sequences of alphanumeric characters as tokens
-                    # and drops everything else
-                    tokenizer = RegexpTokenizer(r'\w+')
-                    tokens = tokenizer.tokenize(cap.lower())
-                    # print('tokens', tokens)
-                    if len(tokens) == 0:
-                        print('cap', cap)
-                        continue
-
-                    tokens_new = []
-                    for t in tokens:
-                        t = t.encode('ascii', 'ignore').decode('ascii')
-                        if len(t) > 0:
-                            tokens_new.append(t)
-                    all_captions.append(tokens_new)
+                    all_captions.append(cap)
                     cnt += 1
                     if cnt == self.embeddings_num:
                         break
@@ -176,77 +162,23 @@ class TextDataset(data.Dataset):
                           % (filenames[i], cnt))
         return all_captions
 
-    def build_dictionary(self, train_captions, test_captions):
-        word_counts = defaultdict(float)
-        captions = train_captions + test_captions
-        for sent in captions:
-            for word in sent:
-                word_counts[word] += 1
-
-        vocab = [w for w in word_counts if word_counts[w] >= 0]
-
-        ixtoword = {}
-        ixtoword[0] = '<end>'
-        wordtoix = {}
-        wordtoix['<end>'] = 0
-        ix = 1
-        for w in vocab:
-            wordtoix[w] = ix
-            ixtoword[ix] = w
-            ix += 1
-
-        train_captions_new = []
-        for t in train_captions:
-            rev = []
-            for w in t:
-                if w in wordtoix:
-                    rev.append(wordtoix[w])
-            # rev.append(0)  # do not need '<end>' token
-            train_captions_new.append(rev)
-
-        test_captions_new = []
-        for t in test_captions:
-            rev = []
-            for w in t:
-                if w in wordtoix:
-                    rev.append(wordtoix[w])
-            # rev.append(0)  # do not need '<end>' token
-            test_captions_new.append(rev)
-
-        return [train_captions_new, test_captions_new,
-                ixtoword, wordtoix, len(ixtoword)]
-
     def load_text_data(self, data_dir, split):
-        filepath = os.path.join(data_dir, 'captions.pickle')
+        # filepath = os.path.join(data_dir, 'our_captions.pickle')
         train_names = self.load_filenames(data_dir, 'train')
-        test_names = self.load_filenames(data_dir, 'test')
-        if not os.path.isfile(filepath):
-            train_captions = self.load_captions(data_dir, train_names)
-            test_captions = self.load_captions(data_dir, test_names)
+        test_names = self.load_filenames(data_dir, 'val')
+        
+        raw_train_captions = self.load_captions(data_dir, 'train', train_names)
+        raw_test_captions = self.load_captions(data_dir, 'val', test_names)
 
-            train_captions, test_captions, ixtoword, wordtoix, n_words = \
-                self.build_dictionary(train_captions, test_captions)
-            with open(filepath, 'wb') as f:
-                pickle.dump([train_captions, test_captions,
-                             ixtoword, wordtoix], f, protocol=2)
-                print('Save to: ', filepath)
-        else:
-            with open(filepath, 'rb') as f:
-                x = pickle.load(f)
-                train_captions, test_captions = x[0], x[1]
-                ixtoword, wordtoix = x[2], x[3]
-                del x
-                n_words = len(ixtoword)
-                print('Load from: ', filepath)
         if split == 'train':
             # a list of list: each list contains
             # the indices of words in a sentence
-            captions = train_captions
+            captions = raw_train_captions
             filenames = train_names
         else:  # split=='test'
-            captions = test_captions
+            captions = raw_test_captions
             filenames = test_names
-        return filenames, captions, ixtoword, wordtoix, n_words
+        return filenames, captions
 
     def load_class_id(self, data_dir, total_num):
         if os.path.isfile(data_dir + '/class_info.pickle'):
@@ -304,7 +236,8 @@ class TextDataset(data.Dataset):
         # random select a sentence
         sent_ix = random.randint(0, self.embeddings_num)
         new_sent_ix = index * self.embeddings_num + sent_ix
-        caps, cap_len = self.get_caption(new_sent_ix)
+        caps = self.captions[new_sent_ix]
+        cap_len = len(caps.split(' '))
         return imgs, caps, cap_len, cls_id, key
 
 

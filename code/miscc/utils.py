@@ -27,8 +27,8 @@ COLOR_DIC = {0:[128,64,128],  1:[244, 35,232],
 FONT_MAX = 50
 
 
-def drawCaption(convas, captions, ixtoword, vis_size, off1=2, off2=2):
-    num = captions.size(0)
+def drawCaption(convas, captions, vis_size, off1=2, off2=2):
+    num = len(captions)
     img_txt = Image.fromarray(convas)
     # get a font
     # fnt = None  # ImageFont.truetype('Pillow/Tests/fonts/FreeMono.ttf', 50)
@@ -37,12 +37,12 @@ def drawCaption(convas, captions, ixtoword, vis_size, off1=2, off2=2):
     d = ImageDraw.Draw(img_txt)
     sentence_list = []
     for i in range(num):
-        cap = captions[i].data.cpu().numpy()
+        cap = captions[i]
         sentence = []
-        for j in range(len(cap)):
-            if cap[j] == 0:
-                break
-            word = ixtoword[cap[j]].encode('ascii', 'ignore').decode('ascii')
+        for j in range(len(cap.split(' '))):
+            # if cap[j] == 0:
+            #     break
+            word = cap[j]
             d.text(((j + off1) * (vis_size + off2), i * FONT_MAX), '%d:%s' % (j, word[:6]),
                    font=fnt, fill=(255, 255, 255, 255))
             sentence.append(word)
@@ -50,7 +50,7 @@ def drawCaption(convas, captions, ixtoword, vis_size, off1=2, off2=2):
     return img_txt, sentence_list
 
 
-def build_super_images(real_imgs, captions, ixtoword,
+def build_super_images(real_imgs, captions,
                        attn_maps, att_sze, lr_imgs=None,
                        batch_size=cfg.TRAIN.BATCH_SIZE,
                        max_word_num=cfg.TEXT.WORDS_NUM):
@@ -99,7 +99,7 @@ def build_super_images(real_imgs, captions, ixtoword,
     num = nvis  # len(attn_maps)
 
     text_map, sentences = \
-        drawCaption(text_convas, captions, ixtoword, vis_size)
+        drawCaption(text_convas, captions, vis_size)
     text_map = np.asarray(text_map).astype(np.uint8)
 
     bUpdate = 1

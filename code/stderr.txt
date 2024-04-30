@@ -1,0 +1,46 @@
+Traceback (most recent call last):
+  File "C:\Users\mehal\Downloads\18786Project\AttnGAN\code\pretrain_DAMSM.py", line 259, in <module>
+    text_encoder, image_encoder, labels, start_epoch = build_models()
+  File "C:\Users\mehal\Downloads\18786Project\AttnGAN\code\pretrain_DAMSM.py", line 167, in build_models
+    text_encoder = BERT_ENCODER(cfg.TEXT.EMBEDDING_DIM)
+  File "C:\Users\mehal\Downloads\18786Project\AttnGAN\code\model.py", line 168, in __init__
+    self.define_module()
+  File "C:\Users\mehal\Downloads\18786Project\AttnGAN\code\model.py", line 171, in define_module
+    self.bert = BertModel.from_pretrained('bert-base-uncased')
+  File "C:\Users\mehal\anaconda3\envs\IDLProj\lib\site-packages\transformers\modeling_utils.py", line 3190, in from_pretrained
+    resolved_archive_file = cached_file(pretrained_model_name_or_path, filename, **cached_file_kwargs)
+  File "C:\Users\mehal\anaconda3\envs\IDLProj\lib\site-packages\transformers\utils\hub.py", line 398, in cached_file
+    resolved_file = hf_hub_download(
+  File "C:\Users\mehal\anaconda3\envs\IDLProj\lib\site-packages\huggingface_hub\utils\_validators.py", line 119, in _inner_fn
+    return fn(*args, **kwargs)
+  File "C:\Users\mehal\anaconda3\envs\IDLProj\lib\site-packages\huggingface_hub\file_download.py", line 1492, in hf_hub_download
+    http_get(
+  File "C:\Users\mehal\anaconda3\envs\IDLProj\lib\site-packages\huggingface_hub\file_download.py", line 535, in http_get
+    for chunk in r.iter_content(chunk_size=DOWNLOAD_CHUNK_SIZE):
+  File "C:\Users\mehal\anaconda3\envs\IDLProj\lib\site-packages\requests\models.py", line 816, in generate
+    yield from self.raw.stream(chunk_size, decode_content=True)
+  File "C:\Users\mehal\anaconda3\envs\IDLProj\lib\site-packages\urllib3\response.py", line 1043, in stream
+    data = self.read(amt=amt, decode_content=decode_content)
+  File "C:\Users\mehal\anaconda3\envs\IDLProj\lib\site-packages\urllib3\response.py", line 935, in read
+    data = self._raw_read(amt)
+  File "C:\Users\mehal\anaconda3\envs\IDLProj\lib\site-packages\urllib3\response.py", line 862, in _raw_read
+    data = self._fp_read(amt, read1=read1) if not fp_closed else b""
+  File "C:\Users\mehal\anaconda3\envs\IDLProj\lib\site-packages\urllib3\response.py", line 845, in _fp_read
+    return self._fp.read(amt) if amt is not None else self._fp.read()
+  File "C:\Users\mehal\anaconda3\envs\IDLProj\lib\http\client.py", line 459, in read
+    n = self.readinto(b)
+  File "C:\Users\mehal\anaconda3\envs\IDLProj\lib\http\client.py", line 503, in readinto
+    n = self.fp.readinto(b)
+  File "C:\Users\mehal\anaconda3\envs\IDLProj\lib\socket.py", line 669, in readinto
+    return self._sock.recv_into(b)
+  File "C:\Users\mehal\anaconda3\envs\IDLProj\lib\ssl.py", line 1274, in recv_into
+    return self.read(nbytes, buffer)
+  File "C:\Users\mehal\anaconda3\envs\IDLProj\lib\ssl.py", line 1132, in read
+    return self._sslobj.read(len, buffer)
+KeyboardInterrupt
+^CC:\Users\mehal\anaconda3\envs\IDLProj\lib\site-packages\torchvision\models\inception.py:43: FutureWarning: The default weight initialization of inception_v3 will be changed in future releases of torchvision. If you wish to keep the old behavior (which leads to long initialization times due to scipy/scipy#11299), please set init_weights=True.
+  warnings.warn(
+Downloading: "https://download.pytorch.org/models/inception_v3_google-1a9a5a14.pth" to C:\Windows\system32\config\systemprofile/.cache\torch\hub\checkpoints\inception_v3_google-1a9a5a14.pth
+  0%|          | 0.00/104M [00:00<?, ?B/s]  1%|1         | 1.16M/104M [00:00<00:09, 11.6MB/s]  3%|2         | 2.97M/104M [00:00<00:06, 15.9MB/s]  5%|4         | 4.95M/104M [00:00<00:05, 17.8MB/s]  6%|6         | 6.65M/104M [00:00<00:05, 17.2MB/s]  8%|7         | 8.30M/104M [00:00<00:05, 17.2MB/s] 10%|9         | 9.94M/104M [00:00<00:05, 16.7MB/s] 11%|#1        | 11.7M/104M [00:00<00:05, 17.3MB/s] 13%|#2        | 13.4M/104M [00:00<00:05, 17.1MB/s] 14%|#4        | 15.0M/104M [00:00<00:05, 16.1MB/s] 16%|#6        | 16.7M/104M [00:01<00:05, 16.6MB/s] 18%|#7        | 18.3M/104M [00:01<00:05, 16.5MB/s] 20%|#9        | 20.4M/104M [00:01<00:04, 18.0MB/s] 21%|##1       | 22.1M/104M [00:01<00:04, 17.2MB/s] 23%|##2       | 23.8M/104M [00:01<00:04, 17.2MB/s] 25%|##4       | 25.7M/104M [00:01<00:04, 18.0MB/s] 26%|##6       | 27.4M/104M [00:01<00:04, 17.1MB/s] 28%|##8       | 29.1M/104M [00:01<00:04, 16.1MB/s] 30%|##9       | 30.7M/104M [00:01<00:04, 16.2MB/s] 31%|###1      | 32.4M/104M [00:02<00:04, 16.1MB/s] 33%|###3      | 34.6M/104M [00:02<00:04, 17.9MB/s] 35%|###4      | 36.3M/104M [00:02<00:04, 17.3MB/s] 37%|###6      | 38.0M/104M [00:02<00:04, 16.7MB/s] 38%|###8      | 39.6M/104M [00:02<00:04, 15.2MB/s] 40%|###9      | 41.1M/104M [00:02<00:04, 15.1MB/s] 41%|####      | 42.5M/104M [00:02<00:04, 14.5MB/s] 42%|####2     | 44.1M/104M [00:02<00:04, 15.0MB/s] 44%|####4     | 45.7M/104M [00:02<00:03, 15.4MB/s] 45%|####5     | 47.2M/104M [00:03<00:03, 15.0MB/s] 47%|####6     | 48.6M/104M [00:03<00:04, 14.1MB/s] 48%|####8     | 50.0M/104M [00:03<00:04, 12.4MB/s] 49%|####9     | 51.2M/104M [00:03<00:04, 11.8MB/s] 50%|#####     | 52.4M/104M [00:03<00:04, 11.7MB/s] 52%|#####1    | 53.5M/104M [00:03<00:05, 10.4MB/s] 53%|#####2    | 54.9M/104M [00:03<00:04, 11.3MB/s] 54%|#####4    | 56.1M/104M [00:03<00:04, 11.8MB/s] 56%|#####5    | 58.1M/104M [00:03<00:03, 14.1MB/s] 57%|#####7    | 59.5M/104M [00:04<00:04, 11.2MB/s] 58%|#####8    | 60.7M/104M [00:04<00:06, 6.49MB/s] 59%|#####9    | 61.6M/104M [00:05<00:16, 2.74MB/s] 62%|######2   | 64.9M/104M [00:05<00:07, 5.35MB/s] 64%|######4   | 66.8M/104M [00:05<00:05, 6.87MB/s] 66%|######5   | 68.3M/104M [00:05<00:04, 7.97MB/s] 68%|######7   | 70.2M/104M [00:06<00:03, 9.82MB/s] 70%|######9   | 72.3M/104M [00:06<00:02, 11.9MB/s] 71%|#######1  | 74.0M/104M [00:06<00:02, 13.1MB/s] 73%|#######2  | 75.8M/104M [00:06<00:02, 13.5MB/s] 75%|#######4  | 77.5M/104M [00:06<00:01, 14.7MB/s] 77%|#######6  | 79.5M/104M [00:06<00:01, 16.0MB/s] 78%|#######8  | 81.2M/104M [00:06<00:01, 15.8MB/s] 80%|#######9  | 82.8M/104M [00:06<00:01, 15.9MB/s] 81%|########1 | 84.5M/104M [00:06<00:01, 16.2MB/s] 83%|########3 | 86.2M/104M [00:07<00:01, 16.3MB/s] 85%|########4 | 87.8M/104M [00:07<00:01, 16.4MB/s] 86%|########6 | 89.4M/104M [00:07<00:00, 16.1MB/s] 88%|########7 | 91.2M/104M [00:07<00:00, 16.9MB/s] 89%|########9 | 92.8M/104M [00:07<00:00, 16.1MB/s] 91%|#########1| 94.9M/104M [00:07<00:00, 17.3MB/s] 93%|#########3| 96.6M/104M [00:07<00:00, 17.3MB/s] 95%|#########4| 98.4M/104M [00:07<00:00, 17.7MB/s] 97%|#########6| 100M/104M [00:07<00:00, 18.4MB/s]  98%|#########8| 102M/104M [00:08<00:00, 17.0MB/s]100%|#########9| 104M/104M [00:08<00:00, 16.8MB/s]100%|##########| 104M/104M [00:08<00:00, 13.4MB/s]
+C:\Users\mehal\anaconda3\envs\IDLProj\lib\site-packages\torch\nn\modules\module.py:1511: UserWarning: Implicit dimension choice for softmax has been deprecated. Change the call to include dim=X as an argument.
+  return self._call_impl(*args, **kwargs)

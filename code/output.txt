@@ -1,0 +1,48 @@
+Using config:
+{'B_VALIDATION': False,
+ 'CONFIG_NAME': 'DAMSM',
+ 'CUDA': True,
+ 'DATASET_NAME': 'coco',
+ 'DATA_DIR': 'C:/Users/mehal/Downloads/18786Project/AttnGAN/data/coco',
+ 'GAN': {'B_ATTENTION': True,
+         'B_DCGAN': False,
+         'CONDITION_DIM': 100,
+         'DF_DIM': 64,
+         'GF_DIM': 128,
+         'R_NUM': 2,
+         'Z_DIM': 100},
+ 'GPU_ID': 0,
+ 'RNN_TYPE': 'LSTM',
+ 'TEXT': {'CAPTIONS_PER_IMAGE': 5, 'EMBEDDING_DIM': 256, 'WORDS_NUM': 15},
+ 'TRAIN': {'BATCH_SIZE': 48,
+           'B_NET_D': True,
+           'DISCRIMINATOR_LR': 0.0002,
+           'ENCODER_LR': 0.002,
+           'FLAG': True,
+           'GENERATOR_LR': 0.0002,
+           'MAX_EPOCH': 600,
+           'NET_E': '',
+           'NET_G': '',
+           'RNN_GRAD_CLIP': 0.25,
+           'SMOOTH': {'GAMMA1': 4.0,
+                      'GAMMA2': 5.0,
+                      'GAMMA3': 10.0,
+                      'LAMBDA': 1.0},
+           'SNAPSHOT_INTERVAL': 5},
+ 'TREE': {'BASE_SIZE': 299, 'BRANCH_NUM': 1},
+ 'WORKERS': 1}
+Load filenames from: C:/Users/mehal/Downloads/18786Project/AttnGAN/data/coco/train/filenames.pickle (82783)
+Load filenames from: C:/Users/mehal/Downloads/18786Project/AttnGAN/data/coco/val/filenames.pickle (40504)
+Save to:  C:/Users/mehal/Downloads/18786Project/AttnGAN/data/coco\our_captions.pickle
+90 5
+Load filenames from: C:/Users/mehal/Downloads/18786Project/AttnGAN/data/coco/train/filenames.pickle (82783)
+Load filenames from: C:/Users/mehal/Downloads/18786Project/AttnGAN/data/coco/val/filenames.pickle (40504)
+Save to:  C:/Users/mehal/Downloads/18786Project/AttnGAN/data/coco\our_captions.pickle
+C:\Users\mehal\anaconda3\envs\IDLProj\lib\site-packages\torchvision\models\inception.py:43: FutureWarning: The default weight initialization of inception_v3 will be changed in future releases of torchvision. If you wish to keep the old behavior (which leads to long initialization times due to scipy/scipy#11299), please set init_weights=True.
+  warnings.warn(
+Load pretrained model from  https://download.pytorch.org/models/inception_v3_google-1a9a5a14.pth
+C:\Users\mehal\anaconda3\envs\IDLProj\lib\site-packages\torch\nn\modules\module.py:1511: UserWarning: Implicit dimension choice for softmax has been deprecated. Change the call to include dim=X as an argument.
+  return self._call_impl(*args, **kwargs)
+| epoch   0 |     0/ 1724 batches | ms/batch 83.78 | s_loss  0.02  0.02 | w_loss  0.03  0.02
+| epoch   0 |   200/ 1724 batches | ms/batch 1227.23 | s_loss  3.67  3.67 | w_loss  2.78  2.13
+| epoch   0 |   400/ 1724 batches | ms/batch 1630.23 | s_loss  3.48  3.49 | w_loss  1.89  1.58
