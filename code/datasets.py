@@ -143,12 +143,12 @@ class TextDataset(data.Dataset):
         #
         return filename_bbox
 
-    def load_captions(self, data_dir, filenames):
+    def load_captions(self, data_dir, split, filenames):
         all_captions = []
         for i in range(len(filenames)):
-            cap_path = '%s/text/%s.txt' % (data_dir, filenames[i])
+            cap_path = '%s/%s2014/%s.txt' % (data_dir, split, filenames[i])
             with open(cap_path, "r") as f:
-                captions = f.read().decode('utf8').split('\n')
+                captions = f.read().split('\n')
                 cnt = 0
                 for cap in captions:
                     if len(cap) == 0:
@@ -222,8 +222,8 @@ class TextDataset(data.Dataset):
         train_names = self.load_filenames(data_dir, 'train')
         test_names = self.load_filenames(data_dir, 'val')
         if not os.path.isfile(filepath):
-            train_captions = self.load_captions(data_dir, train_names)
-            test_captions = self.load_captions(data_dir, test_names)
+            train_captions = self.load_captions(data_dir, 'train', train_names)
+            test_captions = self.load_captions(data_dir, 'val', test_names)
 
             train_captions, test_captions, ixtoword, wordtoix, n_words = \
                 self.build_dictionary(train_captions, test_captions)
