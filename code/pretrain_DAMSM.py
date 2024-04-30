@@ -8,7 +8,7 @@ from miscc.config import cfg, cfg_from_file
 from datasets import TextDataset
 # from datasets import prepare_data
 
-from model import CNN_ENCODER, CLIP_ENCODER
+from model import CLIP_IMG_ENCODER, CLIP_TEXT_ENCODER
 
 import os
 import sys
@@ -76,6 +76,7 @@ def train(dataloader, cnn_model, rnn_model, batch_size,
         class_ids = class_ids.numpy() 
         words_features, sent_code = cnn_model(imgs[-1])
         # --> batch_size x nef x 17*17
+        words_features = words_features.reshape(-1, cfg.TEXT.EMBEDDING_DIM, 17, 17)
         nef, att_sze = words_features.size(1), words_features.size(2)
         # words_features = words_features.view(batch_size, nef, -1)
 
@@ -153,7 +154,7 @@ def evaluate(dataloader, cnn_model, rnn_model, batch_size):
         words_features, sent_code = cnn_model(real_imgs[-1])
         # nef = words_features.size(1)
         # words_features = words_features.view(batch_size, nef, -1)
-
+        words_features = words_features.reshape(-1, cfg.TEXT.EMBEDDING_DIM, 17, 17)
         # hidden = rnn_model.init_hidden(batch_size)
         words_emb, sent_emb, attention_mask = rnn_model(captions)
 
@@ -176,8 +177,8 @@ def evaluate(dataloader, cnn_model, rnn_model, batch_size):
 
 def build_models():
     # build model ############################################################
-    text_encoder = CLIP_ENCODER(embedding_dim=cfg.TEXT.EMBEDDING_DIM)
-    image_encoder = CNN_ENCODER(cfg.TEXT.EMBEDDING_DIM)
+    text_encoder = CLIP_TEXT_ENCODER(embedding_dim=cfg.TEXT.EMBEDDING_DIM)
+    image_encoder = CLIP_IMG_ENCODER(cfg.TEXT.EMBEDDING_DIM)
     labels = Variable(torch.LongTensor(range(batch_size)))
     start_epoch = 0
     if cfg.TRAIN.NET_E != '':
