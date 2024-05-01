@@ -4,4 +4,4 @@ Enhance the AttnGAN model using state-of-the-art technology such as BERT and CLI
 
 ### Branch Info
 
-- bert: DAMSM with BERT text encoder and CLIP image encoder
+- bert: DAMSM with BERT text encoder and CNN image encoder
