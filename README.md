@@ -8,6 +8,8 @@ Enhance the AttnGAN model using state-of-the-art technology such as BERT and CLI
 - bert: DAMSM with BERT based text encoder and CNN image encoder
 - clip: DAMSM with RNN based text encoder and CLIP image encoder
 - clip-text-image: DAMSM with CLIP text encoder and CLIP image encoder
+- bert-clip: DAMSM with BERT text encoder and CLIP image encoder
+
 
 
 ### Data
